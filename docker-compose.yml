@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+
+  nginx:
+    build:
+      context: ./nginx
+      args:
+        DEV_DOMAIN: ${DEV_DOMAIN}
+        NGINX_SSL: ${NGINX_SSL}
+    container_name: nginx_${APP_NAME}
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - laravel
+
+  php:
+    build:
+      context: ./php
+    container_name: php_${APP_NAME}
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - laravel
+
+  mysql: 
+    image: mariadb:10.7
+    container_name: mysql_${APP_NAME}
+    restart: unless-stopped
+    tty: true
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+        - "3306:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - laravel
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: unless-stopped
+    ports:
+      - 8088:80
+    environment:
+      - PMA_ARBITRARY=1
+    networks:
+      - laravel
+
+networks:
+  laravel:
